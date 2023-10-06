@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface MemberRepository extends JpaRepository<Member,Long> {
@@ -34,4 +35,31 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     @Query("select new study.datajpa.dto.MemberDto(m.id, m.username, t.name) from Member m join m.team t ") //dto로 조회할 땐 꼭 new operation 이라는 걸 꼭 써야 한다. !
     List<MemberDto> findMemberDto();    // new study.datajpa.dto(m.id, m.username, m.team) 마치 생성자로 new 하는 것처럼 다 적어줘야 한다..
-}                                       //JPQL이 제공하는 문법
+    //JPQL이 제공하는 문법
+
+    //파라미터 바인딩
+    // 1. 위치 기반
+    // 2. 이름 기반
+
+    //select m from Member m where m.username = ?0 //위치 기반
+    //select m from Member m where m.username = :name //이름 기반
+
+    //코드 가독성 및 유지보수를 위해 가급적 이름 기반을 사용하자.
+    //위치 기반은 위치가 바뀌어버렸을 때 버그가 발생할 수 있다.
+
+    //위치 기반의 예시
+
+    @Query("select m from Member m where m.username = :name")
+    Member findMembers(@Param("name") String username);
+
+
+    //컬렉션 파라미터 바인딩
+    //Collections 타입으로 in 절 지원
+    //in 절로 여러개를 조회하고 싶을 때 사용하는 기능
+    @Query("select m from Member m where m.username in :names")
+    List<Member> findByNames(@Param("names") Collection<String> names);
+
+
+
+}
+
