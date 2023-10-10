@@ -153,4 +153,51 @@ class MemberRepositoryTest {
         }//AAA와 BBB를 IN 절로 가져오는 쿼리
     }
 
+
+    @Test
+    public void returnType(){
+        Member m1 = new Member("AAA",10);
+        Member m2 = new Member("BBB",20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        //List<Member> findListByUsername(String username); //컬렉션
+        List<Member> aaa = memberRepository.findListByUsername("AAA");
+
+        //Member findMemberByUsername(String username); //단건
+        Member bbb = memberRepository.findMemberByUsername("BBB");
+        System.out.println("bbbbbbbbbbbbbbbbbbbbbbbb = " + bbb);
+
+        Optional<Member> optionalByUsername = memberRepository.findOptionalByUsername("AAA");
+
+        //%컬렉션 조회의 경우%
+        //파라미터 ("???") 에 해당하는 값이 없을 경우
+        //NULL이 아니다.. EMTPY 컬렉션을 반환한다.
+
+        //요는, 리스트는 Null이 아니다. Empty 컬렉션이 반환된다.
+        List<Member> result = memberRepository.findListByUsername("asdfjalksddffj");
+        System.out.println("result =" + result.size() );
+
+        Member findMember = memberRepository.findMemberByUsername("asdfjalksddffj");
+        System.out.println("findMember = " + findMember); //단건인 경우엔 없으면 Null
+        //JPL은 결과가 없으면 NullException 이 나오는데,
+        //jpa는 그냥 NULL 반환해준다.
+
+        //그런데, JAVA 8부턴 Optional이 타입이 나와서
+        Optional<Member> findOptionalMember = memberRepository.findOptionalByUsername("asdfjalksddffj");
+        System.out.println("findOptionalMember =" + findOptionalMember.orElseThrow());
+        //이 경우 findMember = Optinal.empty 라는 결과가 나온다.
+
+        //만약, AAA에 값이 2개라면 예외가 터진다.
+//        Member m1 = new Member("AAA",10);
+//        Member m2 = new Member("AAA",20);
+//        memberRepository.save(m1);
+//        memberRepository.save(m2);
+//
+//        //List<Member> findListByUsername(String username); //컬렉션
+//        List<Member> aaa = memberRepository.findListByUsername("AAA");
+
+
+    }
+
 }

@@ -12,7 +12,9 @@ import javax.persistence.*;
         query = "select m from Member m where m.username =:username"
 )
 public class Member {
-    @Id @GeneratedValue
+
+    @Id
+    @GeneratedValue
     @Column(name = "member_id") //db 테이블은 이제 member_id로 pk를 얘랑 매핑하게 된다.
     private Long id;
     private String username;

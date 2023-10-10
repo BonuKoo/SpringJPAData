@@ -8,6 +8,7 @@ import study.datajpa.entity.Member;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member,Long> {
 
@@ -58,6 +59,18 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //in 절로 여러개를 조회하고 싶을 때 사용하는 기능
     @Query("select m from Member m where m.username in :names")
     List<Member> findByNames(@Param("names") Collection<String> names);
+
+
+
+    //반환타입 1
+    List<Member> findListByUsername(String username); //컬렉션
+
+    //반환타입 2
+    Member findMemberByUsername(String username); //단건
+
+    //반환타입 3
+    Optional<Member> findOptionalByUsername(String username); //단건 Optional boolean Type
+
 
 
 
