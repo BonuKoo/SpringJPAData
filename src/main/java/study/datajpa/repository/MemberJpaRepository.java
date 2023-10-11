@@ -34,7 +34,7 @@ public class MemberJpaRepository {
     }
 
     public Long count(){
-        return em.createQuery("select count (m) from Member m", Long.class)
+        return em.createQuery("select count (m) from Member m where m.age =:age", Long.class )
                 .getSingleResult();
     }
     public Member find(Long id){
@@ -47,4 +47,38 @@ public class MemberJpaRepository {
                 .setParameter("age", age)
                 .getResultList();
     }
+
+
+
+        /*
+        - 검색 조건 : 나이가 10살
+        - 정렬 조건: 이름으로 내림차순
+        - 페이징 조건 : 첫 번째 페이지, 페이지당 보여줄 데이터는 3건
+       */
+
+
+    public List<Member> findByPage(int age, int offset, int limit){
+       return em.createQuery("select m from Member m where m.age =:age order by m.username desc")
+                .setParameter("age", age)
+                .setFirstResult(offset) //몇 번째 부터?
+                .setMaxResults(limit)        //개수를 몇 개 가져올건가
+                .getResultList();
+
+    } //페이징 처리를 했으니, 이게 몇 번째 페이지인지를 나타내줘야 한다.
+
+    public long totalCount(int age){
+        return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult(); //count이니까 단 건 (한 개) -> SingleResult
+
+    }
+
+    public int bulkAgePlus(int age){
+        return em.createQuery("update Member m set m.age = m.age + 1" +
+                   "where m.age >= :age")
+           .setParameter("age", age)
+           .executeUpdate(); //ctrl + alt + N 으로 깔끔하게 리팩토링 , Inline Variable
+    } //파라미터로 넘어온 Age 값과 나이가 같거나 이상인 사람들의 age 값을 1씩 증가
+
+
 }

@@ -4,6 +4,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
@@ -198,6 +202,114 @@ class MemberRepositoryTest {
 //        List<Member> aaa = memberRepository.findListByUsername("AAA");
 
 
+    }
+
+    @Test
+    public void paging() throws Exception {
+        //given
+        //MemberJpaRepositoryTest에서 가져온 memberJpaRepository라서 빨간 불이 뜨는데, 이걸 한번에 바꾸는 단축키 shift + F6
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.Direction.DESC, "username");// 0페이지부터 3개를 가져온다. 아래에서부터
+
+        //when
+
+//      Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+//      Page에서 Slice로 바꾸려면, MemberRepository 인터페이스에 정의되어 있는 findByAge의 반환타입도 Slice로 바꿔야 한다 !
+//        Slice<Member> page = memberRepository.findByAge(age, pageRequest);
+        //0번째에서 3개를 가져온다 - > Page와 다르게 slice는 limit에 1개를 더 붙여서, 총 4개를 가져올 것이다. 페이지는 3개, 슬라이스는 4개
+
+        //long totalCount = memberRepository.totalCount(age);
+        // 토탈 카운트를 따로 변수 지정 안해도 된다.
+        // 반환타입을 Page로 받으면 스프링부트가 page 받고 쿼리 짜고 다 알아서 해준다.
+
+        //페이지 계산 공식 적용...
+        // totalPage = totalCount / size ...
+        // 마지막 페이지 ...
+        // 최초 페이지 ..
+
+
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 모든 엔티티는 그대로 반환하면 안되고, 무조건 DTO로 반환해야 한다 !!!! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        //DTO로 반환하기 위한 꿀 팁 :: 맵 사용,      map이라는 것은 , 내부의 것을 바꿔서 다른 결과로 낸다.
+        //이 객체는 dto로 변환 되었기 때문에 , 반환해도 된다!
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+
+
+        //then
+        List<Member> content = page.getContent();
+
+        //Slice가 아닌 Page일 때 가능. slice에는 Total 기능이 없다.
+        //long totalElements = page.getTotalElements();//토탈 카운트와 같은 정보를 가져온다.
+
+        //getTotalElements :: 전체 카운트 수가 몇개?
+
+        //getTotalPages :: 전체 페이지 수가 몇개?
+
+        for (Member member : content) {
+            System.out.println("members = " + member);
+            
+        }
+        //238번째 줄이 Slice가 아닌 Page일 때 가능. slice에는 Total 기능이 없다.
+        //System.out.println("totalElements = " + totalElements);
+
+        //쿼리문을 살펴보면, 내가 특별히 count 를 한 적이 없는데,
+        // 스프링 JPA가, 반환타입이 Page라서 페이지를 계산해야하니까 totalCount (count) 쿼리를 날린다.
+
+        assertThat(content.size()).isEqualTo(3);
+        //238번째 줄이 Slice가 아닌 Page일 때 가능. slice에는 Total 기능이 없다.
+//        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getNumber()).isEqualTo(0); //페이지 번호도 가져올 수 있다 !
+        //238번째 줄이 Slice가 아닌 Page일 때 가능. slice에는 Total 기능이 없다.
+//      assertThat(page.getTotalElements()).isEqualTo(2); //총 페이지 수 2개
+        assertThat(page.isFirst()).isTrue(); //첫 페이지 있냐?
+        assertThat(page.hasNext()).isTrue(); //다음 페이지 있냐?
+
+    }
+    //Slice는 다 가져오지 않고, 다음 페이지가 있는 지 없는 지에 대해 가져온다.
+
+    //Slice라서 좋은 점이 그래서 뭐냐?
+    // 모바일 등 환경에서, Page 1개를  하나 더 있으면 미리 로딩하든가 , 더 보기 기능으로 하나 미리 땡겨놓는 등으로 사용 가능.
+    // Page만 있으면 하나 하나 추가 구현해야 할텐데, Slice로 날로 먹기 가능
+
+
+    //%페이징 쿼리를 실무에서 잘 안쓰려고 하는 이유
+    //%totalCount는 , DB에 있는 모든 데이터를 다 끌고 오려고 한다.
+    //-> 많은 데이터를 끌고 오다보니, 당연히 속도가 느리다. (성능이 구리다)
+    //그래서, totalCount 쿼리는 잘 짜야 한다. (Join 조인이 많이 일어난다고 했을 때.. )
+    // 예를 들어, 이 프로젝트의 엔티티는 Member와 Team이 있다.
+    // Member 값을 가져올 때, Team 엔티티를 join해서 데이터를 가져와야 한다. 그런데, totalCount를 leftJoin 하면, 개수가 다 똑같다
+    // 예를 들어, 멤버와 팀이 있는데 , 멤버를 가져올 때 데이터를 쿼리하는 것은, team 데이터를 Join해서 가져와야 한다.
+    //그런데 토탈 쿼리는 left out join으로 가져온다면 , totalCount 할 때는 join 할 필요가 업사
+    //데이터 개수는 똑같기 때문에.
+    // 이런 경우에는, 카운트 쿼리는 leftJoin 할 필요가 없다. 카운트 쿼리와 원자 쿼리가 다를 수 있는데
+    // 카운트 쿼리를 분리하는 방법을 제공한다.
+
+
+    @Test
+    public void bulkUpdate(){
+        //given
+        memberRepository.save(new Member("member1",10));
+        memberRepository.save(new Member("member2",19));
+        memberRepository.save(new Member("member3",20));
+        memberRepository.save(new Member("member4",21));
+        memberRepository.save(new Member("member5",40));
+
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);//20살이거나 20살 이상인 사람들은 모두 +1
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member member5 = result.get(0);
+        //then
+        assertThat(resultCount).isEqualTo(3);
     }
 
 }

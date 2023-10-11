@@ -79,4 +79,50 @@ class MemberJpaRepositoryTest {
         assertThat(result.get(0).getAge()).isEqualTo(20);
         assertThat(result.size()).isEqualTo(1);
     }
+
+    @Test
+    public void paging() throws Exception{ //throws Exception 이 있느냐 없느냐에 따라
+
+        //given
+        memberJpaRepository.save(new Member("member1",10));
+        memberJpaRepository.save(new Member("member2",10));
+        memberJpaRepository.save(new Member("member3",10));
+        memberJpaRepository.save(new Member("member4",10));
+        memberJpaRepository.save(new Member("member5",10));
+
+        int age = 10;
+        int offset = 0;
+        int limit = 3;
+        //when
+        List<Member> members = memberJpaRepository.findByPage(age, offset, limit); //페이징 된 컨텐츠를 가져오고서
+        long totalCount = memberJpaRepository.totalCount(age);                     //토탈 카운트를 가져온다.
+
+        //페이지 계산 공식 적용..
+        // totalPage = totalCount //size..
+        // 마지막 페이지
+        // 최초 페이지..
+
+        //then
+        assertThat(members.size()).isEqualTo(3); //offset이 0이고, limit이 3이기 때문에 member1, member2, member3 이 뽑힌다.
+        assertThat(totalCount).isEqualTo(5);    //총 개수는 member1, member2~ member5 총 5개. 5가 뽑힌다.
+
+
+    }
+
+    @Test
+    public void bulkUpdate(){
+        //given
+        memberJpaRepository.save(new Member("member1",10));
+        memberJpaRepository.save(new Member("member2",19));
+        memberJpaRepository.save(new Member("member3",20));
+        memberJpaRepository.save(new Member("member4",21));
+        memberJpaRepository.save(new Member("member5",40));
+
+
+        //when
+        int resultCount = memberJpaRepository.bulkAgePlus(20);//20살이거나 20살 이상인 사람들은 모두 +1
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+    }
 }

@@ -1,6 +1,10 @@
 package study.datajpa.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
@@ -73,6 +77,24 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
 
 
+    //반환타입 : Page
 
+//    Page<Member> findByAge(int age, Pageable pageable); //
+
+    //Slice를 List로 받을 수 있긴 하다. 이 경우 TotalCount 사용은 불가능
+    //Slice<Member> findByAge(int age, Pageable pageable); //
+
+    //@Query(value = "select m from Member m left join m.team t",     //select m from Member m 까지는, 컨텐츠를 가져오는 쿼리
+    //        countQuery = "select count(m) from Member m")  // select count(m.username) from Member m 는 카운트를 가져온다.
+        // - > 이러면, join이 없기 때문에 , DB에서 Member 카운트를 쉽게 가져올 수 있다. join Team 이 있는 select m from Member m left join m.team t 에서 카운트를 가져올 경우, join team 때문에 쿼리가 복잡해지는데, 그런 문제를 (성능 면에서든, 쓸데없는 쿼리를 안짜도 되는 점에서든) 방지
+    Page<Member> findByAge(int age, Pageable pageable);
+    //생산성 확대.
+
+    @Modifying //이 어노테이션이 있어야, executeUpdate를 실행
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+    //벌크 연산의 주의점
+    // 기존의 JPA에서 엔티티 객체를 이용할 땐, db에 바로 때려박는게 아니라 영속성 컨텍스트 차원에서 관리를 했다.
+    // 근데 BULK는 DB에 바로 값을 넣는다
 }
 
