@@ -14,6 +14,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext EntityManager em;
 
     @Test
     public void testMember(){
@@ -305,9 +308,33 @@ class MemberRepositoryTest {
 
         //when
         int resultCount = memberRepository.bulkAgePlus(20);//20살이거나 20살 이상인 사람들은 모두 +1
+      //  em.flush(); //flush를 통해 남아있는, 변경되지 않는 값을 DB에 반영
+      //  em.clear();
 
         List<Member> result = memberRepository.findByUsername("member5");
         Member member5 = result.get(0);
+        System.out.println("member5 = " + member5); // 쿼리 결과 : member5는 41살이 아닌, 40살로 찍혀있다.
+        //member5 = Member(id=5, username=member5, age=40)
+        //JPA의 영속성 컨텍스트 개념을 살펴보자.
+        //JPA를 통해 쿼리를 날리면 우선 1차 캐시에 값이 저장된다. 이 값을 가지고 변경하고 어쩌고 저쩌고 할 것이다.
+        //그런데 BULK 연산을 때려버리면, 영속성 컨텍스트 무시하고 바로 DB에 꼴아박는다. -> 그럼? 영속성 컨텍스트는 그걸 모른다.
+        //그래서, 벌크연산 때는 이 영속성 컨텍스트를 다 날려버려야 한다. !
+        // 처음엔 em.flush;와 em.clear;가 없었는데,
+        // 추후에 추가
+
+        //벌크 연산의 주의점
+        // 기존의 JPA에서 엔티티 객체를 이용할 땐, db에 바로 때려박는게 아니라 영속성 컨텍스트 차원에서 관리를 했다.
+        // 근데 BULK는 DB에 바로 값을 넣는다
+        //JPQL을 적으면 (QUERY)
+        // .SAVE 등을 한다고 쳤을 때, 영속성 컨텍스트를 DB에 먼저 보내고 (flush를 하고)
+        // 그 다음 쿼리문이 실행된다.
+        //JPQL을 적으면, 쿼리 먼저 보내고 그 다음 JPQL 실행
+
+        //그런데, bulk 연산은 그와는 무관하게
+        // bulk 연산을 해서 DB에는 41살로 들어가있는데, 영속성 컨텍스트는 40살로 남아있는다. -> 그래서 Test에서 em.clear;를 했다
+
+        //-> 그런데 사실, 스프링 JPA 데이터는 em.flush 없이 다른 기능도 제공한다. ( @Modifying ( clear Automatically )
+
         //then
         assertThat(resultCount).isEqualTo(3);
     }

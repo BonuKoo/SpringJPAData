@@ -90,11 +90,10 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     Page<Member> findByAge(int age, Pageable pageable);
     //생산성 확대.
 
-    @Modifying //이 어노테이션이 있어야, executeUpdate를 실행
+    @Modifying(clearAutomatically = true) //Modifying 어노테이션이 있어야, executeUpdate를 실행         //clearAutomatically = true가 있으면, em.clear 를 자동으로 실행해준다.
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
-    //벌크 연산의 주의점
-    // 기존의 JPA에서 엔티티 객체를 이용할 땐, db에 바로 때려박는게 아니라 영속성 컨텍스트 차원에서 관리를 했다.
-    // 근데 BULK는 DB에 바로 값을 넣는다
+
+
 }
 
