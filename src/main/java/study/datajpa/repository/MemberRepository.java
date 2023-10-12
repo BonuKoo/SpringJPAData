@@ -124,7 +124,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     //1-2
     //    작성 후
-    //@EntityGraph(attributePaths = ("team"))
+    //@EntityGraph(attributePaths = ("team")) /
     @EntityGraph("Member.all")
     List<Member> findEntityGraphByUsername(@Param("username") String username);
 
