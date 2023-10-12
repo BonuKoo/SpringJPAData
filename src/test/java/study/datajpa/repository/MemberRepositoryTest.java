@@ -339,4 +339,48 @@ class MemberRepositoryTest {
         assertThat(resultCount).isEqualTo(3);
     }
 
+    @Test
+    public void findMemberLazy(){
+        //given
+        //member1 -> teamA 참조
+        //member2 -> teamB 참조
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member1", 10, teamA);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+        //영속성 컨텍스트에 있는 캐시 정보를 완전히 DB에 반영하고 , 영속성 컨텍스트를 완전히 날림
+
+        //WHEN     N+1 현상
+        //SELECT Member 1 (쿼리를 한번 날렸는데, 그 결과가 2개 )
+
+        //1.1 FetchJoin 전
+        //List<Member> members =  memberRepository.findAll(); 
+
+        
+       //순수하게 member 객체만 뽑아옴 select Member
+        //1.2
+        //List<Member> members =  memberRepository.findMemberFetchJoin(); //1-2 fetch Join 후
+
+        //1.3 EntityGraph 작성
+        //List<Member> members =  memberRepository.findAll();
+
+        //1.4 EntityGraphByUsername
+        List<Member> members =  memberRepository.findEntityGraphByUsername("member1");
+        //한번에 2개 조회 할려고 둘 다 member1로 바꿈
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+    }
+
+
 }

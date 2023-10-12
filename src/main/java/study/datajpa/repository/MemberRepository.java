@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -93,6 +94,40 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     @Modifying(clearAutomatically = true) //Modifying 어노테이션이 있어야, executeUpdate를 실행         //clearAutomatically = true가 있으면, em.clear 를 자동으로 실행해준다.
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+
+
+    //N + 1 문제를 해결하기 위한 fetch join
+    @Query("select m from Member m left join fetch m.team") //fetch join을 사용하면, Member를 가져올 때 member와 관련된 team을 한방 쿼리로 다 끌고 온다.
+    List<Member> findMemberFetchJoin();
+
+    @Override //JPA 레포지토리에 정의되어 있는 List<T> findAll을 재정의
+    @EntityGraph(attributePaths = {"team"}) //JPQL 일일이 짜기 귀찮지? 그럼 이렇게 하자.
+    List<Member> findAll();
+
+
+    //그럼 만약 JPQL도 짜고, fetchJoin도 하고 싶다면?
+    //이렇게 하면, Username 가지고 단순 작성했는데도
+    //Team fetchJoin이 가능  - findMemberEntityGraph
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+
+
+    //1-1 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
+    //    작성 전
+    //회원 데이터를 쓸 때, team 데이터를 쓸 일이 너무 많으면
+    //이런 식으로 - findEntityGraphByUsername
+    //@EntityGraph(attributePaths = ("team"))
+    //List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    //1-2
+    //    작성 후
+    //@EntityGraph(attributePaths = ("team"))
+    @EntityGraph("Member.all")
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
 
 
 }
