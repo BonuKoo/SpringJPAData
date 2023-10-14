@@ -11,7 +11,13 @@ spring:
       hibernate:
   # show_sql: true
         format_sql: true
-
+  # (1) 글로벌 디폴트 설정 해놓기.
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 2000
+        one-indexed-parameters: true
 logging.level:
   org.hibernate.SQL: debug
   #org.hibernate.type: trace

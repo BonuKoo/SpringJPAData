@@ -31,6 +31,8 @@ class MemberRepositoryTest {
     @Autowired TeamRepository teamRepository;
     @PersistenceContext EntityManager em;
 
+
+//    @Autowired MemberQueryRepository memberQueryRepository;
     @Test
     public void testMember(){
 
@@ -159,7 +161,6 @@ class MemberRepositoryTest {
 
         }//AAA와 BBB를 IN 절로 가져오는 쿼리
     }
-
 
     @Test
     public void returnType(){
@@ -380,6 +381,42 @@ class MemberRepositoryTest {
             System.out.println("member.teamClass = " + member.getTeam().getClass());
             System.out.println("member.team = " + member.getTeam().getName());
         }
+    }
+
+    @Test
+    public void queryHint(){
+
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush(); //save를 하면, 영속성 컨텍스트에 넣고, flush를 하면 실제 DB에 값이 들어간다.
+        em.clear(); //그리고서 clear를 하면 영속성 컨텍스트를 지운다.
+
+        //when
+       Member findMember = memberRepository.findReadOnlyByUsername("member1");
+       findMember.setUsername("member2");
+
+       em.flush(); // 변경되지 않는다.
+
+    }
+
+    @Test
+    public void lock(){
+
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush(); //save를 하면, 영속성 컨텍스트에 넣고, flush를 하면 실제 DB에 값이 들어간다.
+        em.clear(); //그리고서 clear를 하면 영속성 컨텍스트를 지운다.
+
+        //when
+        memberRepository.findLockByUsername("member1");
+
+    }
+
+    @Test
+    public void callCustom(){
+        List<Member> result = memberRepository.findMemberCustom();
     }
 
 
