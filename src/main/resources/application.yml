@@ -11,7 +11,7 @@ spring:
       hibernate:
   # show_sql: true
         format_sql: true
-  # (1) 글로벌 디폴트 설정 해놓기.
+  # (1) 글로벌 디폴트 설정 해놓기
   data:
     web:
       pageable:
