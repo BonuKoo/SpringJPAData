@@ -38,6 +38,7 @@ public class MemberController {
         PageRequest request = PageRequest.of(1,2);
         Page<MemberDto> map = memberRepository.findAll(pageable)
                 .map(MemberDto::new);
+        return map;
     } //실무에선 거의 인라인 (Ctrl + Alt + N)
       //거의 이대로 쓰면 되지 않을까?
 
@@ -53,10 +54,10 @@ public class MemberController {
     // 그런데 이 방법은 web에서 page 파라미터를 -1 처리 할 뿐이다.
     // 따라서 응답값인 Page에 모두 0페이지 인덱스를 사용하는 한계가 있다.
 
-    @PostConstruct
-    public void init(){
-       for (int i = 0; i< 100; i++){
-           memberRepository.save(new Member("user" + i , i));
-       }
-    }
+//    @PostConstruct
+//    public void init(){
+//       for (int i = 0; i< 100; i++){
+//           memberRepository.save(new Member("user" + i , i));
+//       }
+//    }
 }

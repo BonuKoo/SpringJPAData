@@ -135,5 +135,7 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
 
     @Lock(LockModeType.PESSIMISTIC_WRITE) //JAVAX PERSISTENCE = JPA 패키지
     List<Member> findLockByUsername(String username);
+
+
 }
 
